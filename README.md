@@ -1,7 +1,7 @@
 ### Streaming Exercise 
 
 
-This repo is designed to create a small streaming application to learn more about message broker tools like RabbitMq and Apache Kafka. Then we can think about how to deploy it to multiple cloud providers (i.e. AWS, GCP, and Azure or just your on-prime datacentres).
+This repo is designed to create a small streaming application to learn more about message broker tools like RabbitMq and Apache Kafka. Then we can think about how to deploy it to multiple cloud providers (i.e. AWS, GCP, and Azure or just your on-premise datacentres).
 
 #### How to use this repo?
 - Start the message broker servers
