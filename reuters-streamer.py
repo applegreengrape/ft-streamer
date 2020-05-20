@@ -1,87 +1,56 @@
-# https://ir.thomsonreuters.com/rss-feeds
-
 import feedparser
 import os
 import time
-import threading
+import mysql.connector
 from threading import Thread
-import pika
-from kafka import KafkaProducer
 
-class rss_parser:
-    def __init__(req, url):
-        req.url = url
-    
-    def fetchDetails(req):
-        try:
-            url = req.url
-            title = ''
-            link = ''
-            row = ''
-            result = []
-            feed = feedparser.parse(url)
-            for entry in feed['entries']:
-                title = entry['title']
-                link = entry['link']
-                published = entry['published']
-                row = [title, link, published]
-                result.append(row)
-            return result
-        except Exception as e:
-            print(e)
-
-def getstats(url):
+def reuters(topic, url):
     try:
-        rss = rss_parser(url)
-        result = rss.fetchDetails()
-        return result      
-    except Exception as e:
-            print(e)
-
-def rabbitmq(topic, message):
-    credentials = pika.PlainCredentials('rabbitmq', 'rabbitmq')
-    parameters = pika.ConnectionParameters('localhost',
-                                       5672,
-                                       '/',
-                                       credentials)
-    connection = pika.BlockingConnection(parameters) #default is localhost
-    channel = connection.channel() 
-    channel.queue_declare(queue=topic) 
-    channel.basic_publish(exchange='', routing_key=topic, body=message)
-
-def kafka(topic, message):
-    producer = KafkaProducer(bootstrap_servers='localhost:9092')
-    msg = bytes(message, encoding='utf-8')
-    producer.send(topic, key=msg, value=msg)
-
-def worker(topic, url):
-    try:
-        result = getstats(url)
-        title_init = result[0][0]
-        latest_title = result[0][0]
-        while latest_title == title_init :
-            result = getstats(url)
-            latest_title = result[0][0]
-            for r in result:
-                msg = '{0}, {1}, {2}'.format(r[0], r[1], r[2])
-                rabbitmq(topic, msg)
-                kafka(topic, msg)
-                print(msg)
-
-            if latest_title != title_init:
-                result = getstats(url)
-                latest_title = result[0][0]
-                title_init = result[0][0]
-                for r in result:
-                    msg = '{0}, {1}, {2}'.format(r[0], r[1], r[2])
-                    rabbitmq(topic, msg)
-                    kafka(topic, msg)
-                    print(msg)
+        cnx = mysql.connector.connect(user='root', 
+                                      password='root',
+                                      host='127.0.0.1',
+                                      database='news', 
+                                      port=6060)
+        cursor = cnx.cursor()
+        q = "select title from reuters order by id desc limit 1"
+        feed = feedparser.parse(url)
+        for entry in feed['entries']:
+            title = entry['title']
+            link = entry['link']
+            published = entry['published']
+            cursor.execute(q)
+            records = cursor.fetchall()
+            if records:
+                _title = records[0][0]
             else:
-                continue
+                print('db init')
+                data_entry = ("INSERT INTO reuters "
+                "(title, link, published_at, tag) "
+                "VALUES (%s, %s, %s, %s)")
+                value = (title, link, published, topic)
+                cursor.execute(data_entry, value)
+                cursor.execute(q)
+                records = cursor.fetchall()
+                _title = records[0][0]
+            print(_title)
+            if title == _title:
+                print('no new news yet')
+            else:
+                print('add new news')
+                data_entry = ("INSERT INTO reuters "
+                "(title, link, published_at, tag) "
+                "VALUES (%s, %s, %s, %s)")
+                value = (title, link, published, topic)
+                cursor.execute(data_entry, value)
+        cnx.commit()
+        cnx.close()    
     except Exception as e:
             print(e)
-    
+
+def reuters_runner(topic, url):
+    while True:
+        reuters(topic, url)    
+
 urls = [
         ['news', 'https://ir.thomsonreuters.com/rss/news-releases.xml'],
         ['event', 'https://ir.thomsonreuters.com/rss/events.xml'],
@@ -90,5 +59,5 @@ urls = [
 
 for url in urls:
     print(url[0], url[1])
-    t = Thread(target=worker, args=(url[0], url[1],))
+    t = Thread(target=reuters_runner, args=(url[0], url[1],))
     t.start()
