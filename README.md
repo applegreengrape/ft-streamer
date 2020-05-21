@@ -38,4 +38,11 @@ python3 mq-consumer.py
 docker run --name news-streamer -p 6060:3306 -e MYSQL_ROOT_PASSWORD=root -d mysql:latest
 
 
-27619
+```
+                    value = (r[0], r[1], r[2], topic)
+                    cursor.execute(data_entry, value)
+                    cnx.commit()
+                    latest_title = rows[0][0]
+            cursor.execute(update_latest, (latest_title, 'reuters', topic))
+            cnx.commit()
+```
