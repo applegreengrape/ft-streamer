@@ -37,12 +37,5 @@ python3 mq-consumer.py
 
 docker run --name news-streamer -p 6060:3306 -e MYSQL_ROOT_PASSWORD=root -d mysql:latest
 
-```python
-if title == _title:
-                print("no new news yet")
-            else:
-                data_entry = ("INSERT INTO reuters "
-                "(title, link, published_at, tag) "
-                "VALUES (%s, %s, %s, %s)")
-                cursor.execute(data_entry, (title, link, published, topic))
-```
+
+27619

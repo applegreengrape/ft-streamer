@@ -17,18 +17,19 @@ TABLES['reuters'] = (
     "  PRIMARY KEY (`id`)"
     ") ENGINE=InnoDB")
 
-TABLES['ft'] = (
-    "CREATE TABLE `ft` ("
-   "  `id` bigint auto_increment,"
+TABLES['latest'] = (
+    "CREATE TABLE `latest` ("
+    "  `id` bigint auto_increment,"
     "  `title` varchar(512) DEFAULT NULL,"
-    "  `link` varchar(1024) DEFAULT NULL,"
-    "  `published_at` varchar(256) DEFAULT NULL,"
+    "  `publisher` varchar(256) DEFAULT NULL,"
     "  `tag` varchar(256) DEFAULT NULL,"
     "  PRIMARY KEY (`id`)"
     ") ENGINE=InnoDB")
 
-cnx = mysql.connector.connect(user='root', password='root',
-                              host='127.0.0.1', port=6060)
+cnx = mysql.connector.connect(user='root', 
+                              password='root',
+                              host='127.0.0.1',
+                              port = 3308)
 cursor = cnx.cursor()
 
 def create_database(cursor):
