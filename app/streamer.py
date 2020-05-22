@@ -37,19 +37,25 @@ def reuters(topic, url):
             title = rows[0][0]
             print('init title: ', _title, title)
             while title == _title:
-                print('duplicated news')
+                time.sleep(1)
+                print('checking')
                 rows = rss(url)
                 title = rows[0][0]
-                if title != _title:
-                    print('new news')
+                if title != _title:                    
                     while title != _title:
-                        rows = rss(url)
                         for r in rows:
                             title = r[0]
-                            print(title)
-                            if title == _title:
+                            print('new news entry')
+                            if title != _title:
+                                value = (r[0], r[1], r[2], topic)
+                                cursor.execute(data_entry, value)
+                                cnx.commit()
+                            else:
                                 _title = rows[0][0]
-                                             
+                                latest_title = rows[0][0]
+                                cursor.execute(update_latest, (latest_title, 'reuters', topic))
+                                cnx.commit()       
+                                break                                         
         else:
             print('streaming init')
             init_rows = rss(url)
@@ -64,16 +70,5 @@ def reuters(topic, url):
     except Exception as e:
             print(e)
 
-def main():
-    urls = [
-            ['news', 'https://ir.thomsonreuters.com/rss/news-releases.xml'],
-            ['event', 'https://ir.thomsonreuters.com/rss/events.xml'],
-            ['sec', 'https://ir.thomsonreuters.com/rss/sec-filings.xml']
-        ]
 
-    for url in urls:
-        while True:
-            reuters(url[0], url[1])
-
-
-reuters('news', 'https://ir.thomsonreuters.com/rss/news-releases.xml')
+reuters('news', 'http://feeds.reuters.com/reuters/worldnews')
