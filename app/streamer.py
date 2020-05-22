@@ -35,27 +35,25 @@ def reuters(topic, url):
             _title = records[0][0]
             rows = rss(url)
             title = rows[0][0]
-            print('init title: ', _title, title)
+            print('init title: ', _title)
+            print('init title: ', title)
             while title == _title:
                 time.sleep(1)
                 print('checking')
                 rows = rss(url)
                 title = rows[0][0]
-                if title != _title:                    
-                    while title != _title:
-                        for r in rows:
-                            title = r[0]
-                            print('new news entry')
-                            if title != _title:
-                                value = (r[0], r[1], r[2], topic)
-                                cursor.execute(data_entry, value)
-                                cnx.commit()
-                            else:
-                                _title = rows[0][0]
-                                latest_title = rows[0][0]
-                                cursor.execute(update_latest, (latest_title, 'reuters', topic))
-                                cnx.commit()       
-                                break                                         
+                if title != _title:
+                    for r in rows:
+                        if r[0] != _title:
+                            value = (r[0], r[1], r[2], topic)
+                            cursor.execute(data_entry, value)
+                            cnx.commit()
+                        else:
+                            print('break')
+                    latest_title = rows[0][0]
+                    cursor.execute(update_latest, (latest_title, 'reuters', topic))
+                    cnx.commit() 
+                    break                  
         else:
             print('streaming init')
             init_rows = rss(url)
@@ -70,5 +68,5 @@ def reuters(topic, url):
     except Exception as e:
             print(e)
 
-
-reuters('news', 'http://feeds.reuters.com/reuters/worldnews')
+while True:
+    reuters('news', 'http://feeds.reuters.com/reuters/worldnews')
